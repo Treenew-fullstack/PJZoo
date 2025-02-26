@@ -24,7 +24,6 @@ def start(message):
         markup = telebot.types.InlineKeyboardMarkup()
         butt_1 = telebot.types.InlineKeyboardButton("⭐ Пройти викторину ⭐", callback_data="quiz")
         markup.add(butt_1)
-        # Показываем картинку и прикреп. текст.
         bot.send_photo(message.chat.id, open("pictures/logozoo.png", 'rb'), caption=text, reply_markup=markup)
 
 
@@ -45,7 +44,6 @@ def show_menu(message):
         bot.send_message(message.chat.id, text, reply_markup=markup)
 
 
-# Обрабатываем нажатие на кнопку Пройти викторину.
 @bot.callback_query_handler(func=lambda query: query.data == "quiz")
 def start_passing(query):
     user = db.get_user(query.message.chat.id)
@@ -55,7 +53,6 @@ def start_passing(query):
         db.set_user(user["chat_id"], {"is_passed": False, "is_passing": False, "question_index": None,
                                       "answers": []})
 
-    # Если нет то, даём ему её пройти.
     if user["is_passing"]:
         return
 
@@ -67,7 +64,6 @@ def start_passing(query):
         bot.send_message(query.message.chat.id, post["text"], reply_markup=post["keyboard"])
 
 
-# Обрабатываем нажатие на кнопку ответы.
 @bot.callback_query_handler(func=lambda query: query.data.startswith("?ans"))
 def answered(query):
     user = db.get_user(query.message.chat.id)
@@ -81,7 +77,6 @@ def answered(query):
         bot.edit_message_text(post["text"], query.message.chat.id, query.message.id, reply_markup=post["keyboard"])
 
 
-# Обрабатываем нажатие на кнопку след. вопрос.
 @bot.callback_query_handler(func=lambda query: query.data == "?next")
 def next_question(query):
     user = db.get_user(query.message.chat.id)
@@ -94,7 +89,6 @@ def next_question(query):
         bot.edit_message_text(post["text"], query.message.chat.id, query.message.id, reply_markup=post["keyboard"])
 
 
-# Обрабатываем нажатие на кнопку Оставить отзыв.
 @bot.callback_query_handler(func=lambda query: query.data == "review")
 def send_comment(query):
     bot.send_message(query.message.chat.id, f"✌️Привет! {query.message.chat.first_name}✌️\n\n"
@@ -105,7 +99,6 @@ def send_comment(query):
     bot.register_next_step_handler(query.message, save_reviews)
 
 
-# Обрабатываем нажатие на кнопку Сброс данных.
 @bot.callback_query_handler(func=lambda query: query.data == "resets")
 def reset_user(query):
     text = "❗ Учтите, что сброс данных обнулит все результат викторины! ❗\nВы уверены?"
@@ -116,7 +109,6 @@ def reset_user(query):
     bot.send_message(query.message.chat.id, text, reply_markup=markup)
 
 
-# Обрабатываем нажатие на кнопку Контакты.
 @bot.callback_query_handler(func=lambda query: query.data == "contact")
 def contacts(query):
     user = db.get_user(query.message.chat.id)
@@ -129,7 +121,6 @@ def contacts(query):
         bot.send_message(query.message.chat.id, text, reply_markup=markup)
 
 
-# Функция обработки конца и след. вопроса викторины.
 def get_question_message(user):
     if user["question_index"] == db.questions_count:
         animal_counts = db.load_comparison()
@@ -182,7 +173,6 @@ def get_question_message(user):
     }
 
 
-# Функция обработки выбора ответов.
 def get_answered_message(user):
     question = db.get_question(user["question_index"])
     text = f"🔹 Вопрос №{user['question_index'] + 1} 🔹\n\n{question['text']}\n"
@@ -212,7 +202,6 @@ def input_yes(query):
         bot.send_message(query.message.chat.id, "❌ Мне бы Вашу решимость! ❌\nЧтобы вернуться в меню: /menu")
 
 
-# Функция сохранения отзыва.
 def save_reviews(message):
     text = message.text
     user = message.from_user.username
@@ -234,12 +223,10 @@ def save_reviews(message):
 
 
 if __name__ == "__main__":
-    # логирование
     logging.basicConfig(
         handlers=[logging.FileHandler(filename="logs.txt", encoding='utf-8', mode='a+')],
         format="%(asctime)s %(name)s : %(levelname)s : %(message)s", datefmt="%F %A %T", level=logging.DEBUG)
 
-    # Запускаем бота.
     try:
         bot.polling(none_stop=True)
         logging.debug("Работает!")
